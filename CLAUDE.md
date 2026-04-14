@@ -102,7 +102,10 @@ customers (customer_unique_id)
 
 | 요청 유형 | 참조할 skill 파일 |
 |-----------|-------------------|
-| EDA / 데이터 탐색 | `skills/eda.md` |
+| EDA 공통 (최초 1회) | `skills/eda_common.md` |
+| EDA 가설1 배송 지연 | `skills/eda_common.md` + `skills/eda_hypothesis1.md` |
+| EDA 가설2 리뷰 점수 | `skills/eda_common.md` + `skills/eda_hypothesis2.md` |
+| EDA 가설3 카테고리 다양성 | `skills/eda_common.md` + `skills/eda_hypothesis3.md` |
 | 피처 엔지니어링 | `skills/feature_engineering.md` |
 | 전처리 / 결측치 | `skills/preprocessing.md` |
 | 모델 학습 / 튜닝 | `skills/modeling.md` |
