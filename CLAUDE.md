@@ -29,7 +29,7 @@ olist-churn/
 
 ## 핵심 설계 원칙
 
-### 시간 기반 Train/Label Split (데이터 리키지 방지 필수)
+### 시간 기반 Train/Label Split
 ```
 cutoff = max(order_purchase_timestamp) - 90일
 
@@ -49,9 +49,7 @@ cutoff = max(order_purchase_timestamp) - 90일
 ```
 customers (customer_unique_id)
     └── orders (customer_id → unique_id로 매핑)
-            ├── order_reviews (review_score)
-            └── order_items (product_id)
-                    └── products (product_category_name)
+
 ```
 
 ---
@@ -61,21 +59,13 @@ customers (customer_unique_id)
 | 가설 | 핵심 피처 | 근거 테이블 |
 |------|-----------|-------------|
 | 가설1: 배송 지연 → 이탈 | `delivery_delay_days`, `is_delayed` | orders |
-| 가설2: 낮은 리뷰 → 이탈 | `last_review_score`, `avg_review_score`, `has_low_review` | order_reviews |
-| 가설3: 카테고리 다양성 → 유지 | `unique_categories`, `category_diversity_ratio` | order_items, products |
-
-> 상세 피처 정의 → `skills/feature_engineering.md`
 
 ---
 
 ## 전처리 규칙 요약
 - `order_status != 'delivered'` 행 제거 (분석 대상: 정상 배송 완료 주문만)
 - `order_delivered_customer_date` 결측 → 해당 주문 제외
-- `review_score` 결측 → 중앙값 대체 (또는 별도 플래그 피처 추가)
-- `product_category_name` 결측 → `'unknown'` 대체
 - 클래스 불균형 처리: SMOTE 또는 `class_weight='balanced'`
-
-> 상세 처리 방법 → `skills/preprocessing.md`
 
 ---
 
@@ -85,36 +75,69 @@ customers (customer_unique_id)
 - **평가 지표**: AUC-ROC (주), F1-score, Precision, Recall (부)
 - **검증 방법**: Stratified K-Fold (k=5)
 
-> 상세 튜닝 전략 → `skills/modeling.md`
-
 ---
 
 ## 코드 컨벤션
 - 노트북은 **피처 그룹별로 독립 실행 가능한 셀** 단위로 작성
 - 함수는 `src/`에 정의, 노트북에서 import해서 사용
 - 시각화: `plt.style.use('seaborn-v0_8')`, `sns.set_theme(font_scale=2.5)`
-- 한국어 주석 사용
 - 경로는 항상 프로젝트 루트 기준 상대경로
 
----
+--- 
 
-## 작업 요청 시 참고 지침
+## 1. 코딩하기 전에 생각하세요
+**추측하지 마세요. 혼란스러운 점을 숨기지 마세요. 장단점을 명확히 드러내세요.**
 
-| 요청 유형 | 참조할 skill 파일 |
-|-----------|-------------------|
-| EDA 공통 (최초 1회) | `skills/eda_common.md` |
-| EDA 가설1 배송 지연 | `skills/eda_common.md` + `skills/eda_hypothesis1.md` |
-| EDA 가설2 리뷰 점수 | `skills/eda_common.md` + `skills/eda_hypothesis2.md` |
-| EDA 가설3 카테고리 다양성 | `skills/eda_common.md` + `skills/eda_hypothesis3.md` |
-| 피처 엔지니어링 | `skills/feature_engineering.md` |
-| 전처리 / 결측치 | `skills/preprocessing.md` |
-| 모델 학습 / 튜닝 | `skills/modeling.md` |
+실행하기 전에:
+
+- 가정한 내용을 명확하게 밝히세요. 확실하지 않으면 질문하세요.
+- 여러 가지 해석이 가능하다면, 묵묵히 선택하지 말고 모두 제시하십시오.
+- 더 간단한 방법이 있다면 언급하십시오. 필요하다면 반박하십시오.
+- 이해가 안 되는 부분이 있으면 멈추세요. 무엇이 헷갈리는지 말하고 질문하세요.
 
 ---
 
-## 자주 하는 실수 체크리스트
-- [ ] cutoff 이후 데이터가 피처에 포함되지 않았는가?
-- [ ] `customer_id` 대신 `customer_unique_id`를 쓰고 있는가?
-- [ ] 학습/검증 셋 분리 전에 스케일링/인코딩을 적용하진 않았는가?
-- [ ] 평가 지표가 AUC-ROC 기준인가? (accuracy만 보지 않았는가?)
-- [ ] 클래스 불균형을 처리했는가?
+## 2. 단순함이 최우선
+**문제를 해결하는 데 필요한 최소한의 코드만 작성하세요. 추측성 코드는 일절 포함하지 마세요.**
+
+- 요청하신 기능 외에는 추가 기능이 없습니다.
+- 일회용 코드에는 추상화가 필요 없습니다.
+- 요청하지 않은 "유연성"이나 "설정 가능성"은 없습니다.
+- 불가능한 시나리오에 대한 오류 처리가 없습니다.
+- 200줄을 썼는데 50줄로 줄일 수 있다면 다시 쓰세요.
+- 스스로에게 "선임 엔지니어가 이것이 지나치게 복잡하다고 말할까?"라고 질문해 보세요. 만약 그렇다면, 단순화하세요.
+
+---
+
+# 3. 수술적 변화
+**꼭 필요한 것만 만지세요. 자신이 저지른 일은 스스로 수습하세요.**
+
+기존 코드를 편집할 때:
+
+- 인접한 코드, 주석 또는 서식을 "개선"하지 마십시오.
+- 멀쩡한 것을 굳이 리팩토링하지 마세요.
+- 기존 스타일과 일치시키세요. 비록 당신이 다르게 표현하더라도 말입니다.
+- 관련 없는 사용되지 않는 코드를 발견하면 삭제하지 말고 언급해 주세요.
+
+변경 사항으로 인해 고아 파일이 생성되는 경우:
+
+- 사용자가 변경한 내용으로 인해 더 이상 사용되지 않는 임포트/변수/함수를 제거하세요.
+- 요청받지 않는 한 기존의 사용되지 않는 코드를 삭제하지 마십시오.
+- 테스트: 변경된 모든 줄은 사용자의 요청과 직접적으로 연결되어야 합니다.
+
+---
+
+# 4. 목표 중심적 실행
+**성공 기준을 정의합니다. 기준이 충족될 때까지 반복합니다.**
+
+과제를 검증 가능한 목표로 전환하세요:
+
+- "유효성 검사 추가" → "유효하지 않은 입력에 대한 테스트를 작성하고, 해당 테스트를 통과하도록 만들기"
+- "버그 수정" → "버그를 재현하는 테스트를 작성하고, 테스트를 통과시키세요"
+- "X 리팩토링" → "리팩토링 전후에 테스트 통과 확인"
+- 여러 단계를 거치는 작업의 경우, 간략한 계획을 제시하십시오.
+
+1. [Step] → verify: [check]
+2. [Step] → verify: [check]
+3. [Step] → verify: [check]
+명확한 성공 기준은 독립적인 반복 작업을 가능하게 합니다. 반면, 모호한 기준("그냥 작동하게 하라")은 지속적인 명확화를 요구합니다.
