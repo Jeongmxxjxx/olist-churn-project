@@ -91,7 +91,8 @@ reports/figures/
 Thumbs.db
 ehthumbs.db
 desktop.ini
- 
+.DS_Store
+
 # VSCode
 .vscode/ 
  
@@ -104,3 +105,4 @@ logs/
 *.temp
 *.bak
 *.orig
+data/.DS_Store
