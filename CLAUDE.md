@@ -2,7 +2,7 @@
 
 ## 프로젝트 개요
 Kaggle Olist 브라질 이커머스 데이터셋을 이용한 고객 이탈 예측 ML 모델.
-**이탈 정의**: 가장 최근 구매일로부터 90일 이상 재구매 없음 → label=1
+**이탈 정의**: 가장 최근 구매일로부터 180일 이상 재구매 없음 → label=1
 
 ---
 
@@ -31,10 +31,10 @@ olist-churn/
 
 ### 시간 기반 Train/Label Split
 ```
-cutoff = max(order_purchase_timestamp) - 90일
+cutoff = max(order_purchase_timestamp) - 180일
 
 피처 계산 구간: order_purchase_timestamp <= cutoff
-레이블 판정 구간: cutoff < order_purchase_timestamp <= cutoff + 90일
+레이블 판정 구간: cutoff < order_purchase_timestamp <= cutoff + 180일
 ```
 - **cutoff 이전 데이터**로만 피처 계산
 - cutoff 이후 구매 여부로 label 생성
